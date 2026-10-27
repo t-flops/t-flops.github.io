@@ -1,0 +1,54 @@
+---
+title: Continuous batching, drawn out
+description: Static batching leaves the GPU half-idle whenever one request in the batch runs long. Continuous batching fills the gap the moment a slot frees up — here's the mental model.
+pubDate: 2026-10-24
+layer: serving
+tags: ['batching', 'throughput', 'llm']
+---
+
+import ContinuousBatching from '../../components/ContinuousBatching.tsx';
+import Annotate from '../../components/Annotate.tsx';
+import Figure from '../../components/Figure.astro';
+import MarginNote from '../../components/MarginNote.astro';
+
+A GPU serving a language model doesn't run one request at a time — it runs a
+<Annotate client:visible type="underline">batch</Annotate> of them together, because the
+matrix multiplies are far more efficient when they're wide. The question is what happens
+when the requests in a batch finish at *different* times. They always do: one user asks for
+a two-word answer, the next wants three paragraphs.
+
+## The problem with static batching
+
+In classic **static batching**, the GPU picks up a batch of four, runs every request to
+completion, and only then picks up the next four. So the batch runs as slow as its
+*longest* member. While that one straggler keeps generating, the three slots that already
+finished sit there doing nothing — paid-for silicon, zero tokens.
+
+<Figure caption="Toggle to Static and watch utilization sag as finished slots (amber) wait for the straggler. Switch back to Continuous and they refill instantly.">
+  <ContinuousBatching client:visible />
+</Figure>
+
+## Continuous batching
+
+**Continuous batching** throws out the idea of a fixed batch. The scheduler works at the
+level of a single decode step: every token, it looks at which slots are free and pulls the
+next waiting request straight in. A finished request leaves, a queued one takes its place,
+and the GPU stays <Annotate client:visible type="circle" token="--accent2">full</Annotate>
+the whole time.
+
+<MarginNote>
+  <b>Also called</b> in-flight batching or iteration-level scheduling. It's the default in
+  vLLM, TGI, and TensorRT-LLM — and it's the single biggest throughput win most serving
+  stacks ever turn on.
+</MarginNote>
+
+The payoff shows up in the utilization number above. Static batching drifts down toward
+60–70% on realistic traffic; continuous batching parks near 100%. Same GPU, same model —
+you just stopped paying for idle slots.
+
+## The catch
+
+Continuous batching trades simplicity for a scheduler that now runs every step, and it
+leans hard on the <a href="/posts/kv-cache-vram">KV cache</a>: each in-flight request holds
+memory for its whole context, so "how many slots fit" becomes a memory question, not a
+compute one. That's the next drawing.

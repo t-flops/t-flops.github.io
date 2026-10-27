@@ -1,0 +1,54 @@
+---
+title: The KV cache is eating your VRAM
+description: Context length isn't free. Every token a request has seen is parked in GPU memory as a key/value pair — and that bill, not compute, is usually what caps your batch size.
+pubDate: 2026-10-16
+layer: hardware
+tags: ['kv-cache', 'memory', 'llm']
+---
+
+import Annotate from '../../components/Annotate.tsx';
+import MarginNote from '../../components/MarginNote.astro';
+
+When a model generates text, it doesn't re-read the whole prompt on every step. It keeps,
+for each token it has already seen, a **key** and a **value** vector in GPU memory — the
+<Annotate client:visible type="underline">KV cache</Annotate> — and attends to those. That's
+what makes decoding fast. It's also what quietly fills your VRAM.
+
+## The back-of-the-envelope
+
+The cache size for one request is linear in everything you'd expect:
+
+<div class="specblock">
+<span class="off">bytes =</span> 2 <span class="b0">(K and V)</span> × layers × heads × head_dim × seq_len × dtype<br/>
+<span class="off">     =</span> 2 × 32 × 8 × 128 × <span class="b1">seq_len</span> × 2 <span class="off">(fp16)</span><br/>
+<span class="off">     ≈</span> <span class="b2">131 KB</span> per token  <span class="off">// a 7B-class model</span>
+</div>
+
+At ~131&nbsp;KB per token, a single request with an 8K context is parking about **1&nbsp;GB**
+of KV cache. Run 40 of those concurrently and you've spent 40&nbsp;GB — before the model
+weights. On an 80&nbsp;GB card, memory, not FLOPs, is what decides how many requests you can
+batch.
+
+<MarginNote>
+  <b>Why it's shaped like this.</b> Every transformer layer has its own K and V, every
+  attention head its own slice, and the cache grows by one token's worth every decode step.
+  Longer context and more concurrent users both push on the same budget.
+</MarginNote>
+
+## Why it fragments
+
+The ugly part is that requests don't all want the same amount. Reserve a fixed slab per
+request and you waste whatever they don't use; let them grow freely and memory
+<Annotate client:visible type="box" token="--hot">fragments</Annotate> until an allocation
+fails mid-generation and someone gets OOM-killed.
+
+**Paged attention** is the fix most stacks adopted: chop the cache into fixed-size blocks
+(like OS pages), hand them out on demand, and keep a block table per request. No big
+contiguous reservation, far less waste — and it's what lets continuous batching pack the
+GPU as tightly as it does.
+
+## What to take away
+
+Capacity planning for inference is mostly a memory spreadsheet. Before you reach for a
+bigger batch size, work out the KV bill at your real context lengths — the GPU usually runs
+out of *room* long before it runs out of *math*.

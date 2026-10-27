@@ -1,0 +1,52 @@
+---
+title: Why your p99 spikes at every deploy
+description: The median stays flat while the tail blows up every time you roll out. It isn't the model getting slower — it's cold replicas and a load balancer that doesn't know they're cold.
+pubDate: 2026-10-08
+layer: observability
+tags: ['latency', 'p99', 'deploys']
+---
+
+import Annotate from '../../components/Annotate.tsx';
+import MarginNote from '../../components/MarginNote.astro';
+
+Here's a graph every team eventually stares at: you ship a deploy, the
+<Annotate client:visible type="underline">p50 latency</Annotate> barely twitches, and the
+**p99 doubles** for a few minutes before settling. Nothing about the model changed. So what
+got slow?
+
+## The tail is a different population
+
+The median answers "how fast is a typical request." The tail answers "how fast is the
+*unluckiest* request." During a rollout those are two different worlds:
+
+- Most requests still land on warm replicas → p50 is fine.
+- A few land on a replica that just started → cold weights, cold cache, a
+  <Annotate client:visible type="box" token="--hot">40-second</Annotate> first request.
+
+You only need a small fraction of requests to hit a cold replica to move the 99th
+percentile hard, while leaving the 50th untouched. The tail *is* the deploy.
+
+<MarginNote>
+  <b>Rule of thumb:</b> if p50 is flat and p99 spikes on a time-bounded event (deploy,
+  scale-up, node replacement), suspect a cold or saturated subset of replicas — not the
+  model.
+</MarginNote>
+
+## The load balancer makes it worse
+
+A plain round-robin balancer treats the cold replica as equal and keeps handing it traffic
+while it crawls. Three things take the edge off:
+
+1. **Readiness that means ready.** Don't mark a replica healthy until it has loaded weights
+   *and* served a warm-up request. A passing `/health` that returns before the model is
+   loaded is how cold replicas get traffic.
+2. **Least-outstanding-requests routing.** Send each request to the replica with the fewest
+   in flight, so a slow one naturally sheds load instead of accumulating it.
+3. **Request hedging.** For read-only inference, fire a backup request after a short delay
+   and take whichever returns first. It trims the tail at the cost of a little extra work.
+
+## What to watch
+
+Put p50 and p99 on the *same* chart, mark your deploys on it, and add replica age. Once you
+can see the tail track the rollout, the fix stops being "make the model faster" and becomes
+"stop routing to cold replicas" — which is a much easier problem.

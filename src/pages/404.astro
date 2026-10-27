@@ -1,0 +1,79 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="404 — No Route Served" description="No healthy upstream for that path.">
+  <section class="nf">
+    <div class="nf-code">404</div>
+    <h1>No route served.</h1>
+    <p class="lede">
+      The request hit the gateway, the gateway looked for a healthy upstream, and came back
+      empty — there's nothing listening on this path.
+    </p>
+
+    <figure class="nf-fig" data-sketch-frame>
+      <svg viewBox="0 0 440 200" role="img"
+           aria-label="A request arrow reaching a router, whose slots point at no healthy upstream.">
+        <!-- request -->
+        <text x="20" y="54" font-family="var(--font-mono)" font-size="12" fill="var(--ink-soft)">GET /this-page</text>
+        <path d="M20 66 H150" stroke="var(--accent)" stroke-width="2.4"/>
+        <path d="M146 61 l7 5 -7 5" stroke="var(--accent)" stroke-width="2.4" fill="none"/>
+
+        <!-- router -->
+        <rect x="150" y="40" width="90" height="120" rx="5" fill="var(--panel)" stroke="var(--ink)" stroke-width="2.4"/>
+        <text x="195" y="34" text-anchor="middle" font-family="var(--font-mono)" font-size="11" fill="var(--ink-soft)">router</text>
+        <rect x="162" y="56" width="66" height="26" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+        <rect x="162" y="90" width="66" height="26" rx="3" fill="none" stroke="var(--line2)" stroke-width="1.8" stroke-dasharray="4 3"/>
+        <rect x="162" y="124" width="66" height="26" rx="3" fill="none" stroke="var(--line2)" stroke-width="1.8" stroke-dasharray="4 3"/>
+
+        <!-- dangling pointer to nowhere -->
+        <path class="dangle" d="M240 69 Q 300 69 300 100 T 360 128" stroke="var(--hot)" stroke-width="2" fill="none" stroke-dasharray="4 4"/>
+        <text x="300" y="150" text-anchor="middle" font-family="var(--font-hand)" font-size="14" fill="var(--hot)">no healthy upstream</text>
+      </svg>
+    </figure>
+
+    <a class="nf-btn" href="/">← back to the stack</a>
+  </section>
+
+  <style>
+    .nf { text-align: center; padding-top: 8px; }
+    .nf-code {
+      font-family: var(--font-display);
+      font-size: clamp(3.4rem, 16vw, 6rem);
+      line-height: 0.9;
+      color: var(--accent);
+    }
+    .nf h1 { margin: 0.15em 0 0.3em; }
+    .nf .lede { max-width: 46ch; margin-inline: auto; }
+    .nf-fig {
+      position: relative;
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 16px 14px 10px;
+      margin: 1.8em auto 1.6em;
+      max-width: 440px;
+      box-shadow: 0 12px 30px -24px rgba(0, 0, 0, 0.55);
+    }
+    .nf-fig svg { display: block; width: 100%; height: auto; }
+    .dangle { animation: nf-wiggle 2.2s ease-in-out infinite; }
+    @keyframes nf-wiggle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(4px); }
+    }
+    .nf-btn {
+      display: inline-block;
+      font-family: var(--font-hand);
+      font-size: 1.05rem;
+      color: var(--accent);
+      background: transparent;
+      border: 1.8px dashed var(--accent);
+      border-radius: 22px;
+      padding: 7px 20px;
+      text-decoration: none;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .nf-btn:hover,
+    .nf-btn:focus-visible { background: var(--accent); color: var(--panel); outline: none; }
+    @media (prefers-reduced-motion: reduce) { .dangle { animation: none; } }
+  </style>
+</BaseLayout>

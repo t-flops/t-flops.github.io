@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLayer, LAYERS, type LayerSlug } from '../../utils/posts';
+
+export async function getStaticPaths() {
+  return LAYERS.map((l) => ({ params: { layer: l.slug } }));
+}
+
+const { layer: slug } = Astro.params;
+const layer = await getLayer(slug as LayerSlug);
+const fmt = (d: Date) =>
+  new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+
+<BaseLayout title={layer.name} description={layer.desc}>
+  <a class="back-link" href="/layers/">← all layers</a>
+  <div class="eyebrow" style="margin-top:16px;">{layer.code} · layer</div>
+  <h1>{layer.name}</h1>
+  <p class="lede">{layer.desc}</p>
+
+  {layer.posts.length === 0 ? (
+    <p class="byline">Nothing published in this layer yet — it's on the drawing board.</p>
+  ) : (
+    <ul class="post-list">
+      {layer.posts.map((p) => (
+        <li class="post-card" data-sketch-frame>
+          <a class="card-title" href={`/posts/${p.id}`}>{p.data.title}</a>
+          <div class="meta">{fmt(p.data.pubDate)}</div>
+          <p>{p.data.description}</p>
+        </li>
+      ))}
+    </ul>
+  )}
+</BaseLayout>

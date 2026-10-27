@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Figure from '../components/Figure.astro';
+import ContinuousBatching from '../components/ContinuousBatching.tsx';
+import { getLayerGroups, getPublishedPosts, LAYERS } from '../utils/posts';
+
+const groups = await getLayerGroups(true);
+const countOf = new Map(
+  groups.map((g) => [
+    g.slug,
+    {
+      published: g.posts.filter((p) => !p.data.draft).length,
+      drafts: g.posts.filter((p) => p.data.draft).length,
+    },
+  ])
+);
+const latest = await getPublishedPosts();
+const fmt = (d: Date) =>
+  new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+const layerOf = (slug: string) => LAYERS.find((l) => l.slug === slug)!;
+---
+
+<BaseLayout title="tflops">
+  <div class="eyebrow">AI inference <span class="dot">·</span> MLOps <span class="dot">·</span> infrastructure</div>
+  <h1>The inference stack, <em>drawn to spec</em>.</h1>
+  <p class="lede">
+    A hand-drawn field guide to serving models in production — batching, autoscaling,
+    GPUs, and the tail latencies nobody warned you about. Every moving part labeled,
+    measured, and poked at until it makes sense.
+  </p>
+
+  <Figure caption="Continuous batching: a finished slot is refilled from the queue immediately — toggle Static to watch stragglers waste the GPU.">
+    <ContinuousBatching client:visible />
+  </Figure>
+
+  <div class="section-label">The stack</div>
+  <nav class="stack">
+    {LAYERS.map((l) => {
+      const c = countOf.get(l.slug)!;
+      return (
+        <a class="layer-card" href={`/layers/${l.slug}/`}>
+          <span class="layer-code">{l.code}</span>
+          <span class="layer-body">
+            <span class="layer-name">{l.name}</span>
+            <p class="layer-desc">{l.desc}</p>
+          </span>
+          <span class="layer-count">
+            {c.published} post{c.published === 1 ? '' : 's'}
+            {c.drafts ? <span class="soon"> · {c.drafts} soon</span> : null}
+          </span>
+        </a>
+      );
+    })}
+  </nav>
+
+  <div class="section-label">Latest</div>
+  {latest.length === 0 ? (
+    <p class="byline">First post is on the drawing board — check back soon.</p>
+  ) : (
+    <ul class="post-list">
+      {latest.map((p) => {
+        const l = layerOf(p.data.layer);
+        return (
+          <li class="post-card" data-sketch-frame>
+            <div class="card-head">
+              <a class="layer-chip" href={`/layers/${l.slug}/`}>{l.code}</a>
+              <a class="card-title" href={`/posts/${p.id}`}>{p.data.title}</a>
+            </div>
+            <div class="meta">{fmt(p.data.pubDate)}</div>
+            <p>{p.data.description}</p>
+          </li>
+        );
+      })}
+    </ul>
+  )}
+</BaseLayout>

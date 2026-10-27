@@ -1,0 +1,112 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const email = 'kaleem@holisticresilience.org';
+---
+
+<BaseLayout title="About" description="What tflops is, and who's writing it.">
+  <a class="back-link" href="/">← all writing</a>
+  <h1 style="margin-top:16px;">About</h1>
+
+  <section class="author-card" data-sketch-frame>
+    <div class="monogram" data-sketch-frame="circle" data-sketch-stroke="--accent">
+      <svg viewBox="0 0 120 120" role="img" aria-label="A hand-drawn blueprint of a GPU accelerator card">
+        <!-- board -->
+        <rect x="20" y="34" width="80" height="52" rx="4" fill="none" stroke="var(--ink)" stroke-width="3"/>
+        <!-- die -->
+        <rect x="40" y="48" width="30" height="24" rx="3" fill="none" stroke="var(--accent)" stroke-width="3"/>
+        <circle cx="55" cy="60" r="4" fill="var(--accent2)"/>
+        <!-- memory stacks -->
+        <rect x="76" y="48" width="8" height="24" fill="none" stroke="var(--ink-soft)" stroke-width="2.4"/>
+        <rect x="88" y="48" width="8" height="24" fill="none" stroke="var(--ink-soft)" stroke-width="2.4"/>
+        <!-- pcie fingers -->
+        <path d="M34 86 V98 M44 86 V98 M54 86 V98 M64 86 V98 M74 86 V98"
+              stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round"/>
+        <!-- spark -->
+        <path d="M100 30 V38 M96 34 H104" stroke="var(--hot)" stroke-width="2.6" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="author-text">
+      <h2 class="author-name">tflops</h2>
+      <p class="author-role">inference · mlops · infrastructure</p>
+      <p>
+        I kept shipping models and then fighting the part nobody writes down: the serving
+        layer. Why the <code>p99</code> spikes on deploy, where the VRAM goes, when to add a
+        replica, what a rack actually costs. So I started taking it apart and drawing each
+        piece until it made sense.
+      </p>
+      <p>
+        tflops is that teardown, written in public. The bet is simple: if I can <em>draw</em>
+        how inference works at the metal, I actually understand it — and so will you.
+      </p>
+      <p class="contact">
+        Say hi · <a href={`mailto:${email}`}>{email}</a>
+      </p>
+    </div>
+  </section>
+
+  <h2>What this is</h2>
+  <p class="lede"><b>tflops</b> is a hand-drawn field guide to running models in production.</p>
+  <p>
+    Every post takes one thing the docs gloss over — continuous batching, the KV cache,
+    cold-start autoscaling, tail latency, GPU packing — and rebuilds it from first
+    principles, with sketches and small animations you can poke at. Less "here's the YAML,"
+    more "here's what the GPU is actually doing." Posts are filed by the
+    <a href="/layers/">layer of the stack</a> they dig into.
+  </p>
+
+  <style>
+    .author-card {
+      position: relative;
+      display: flex;
+      gap: 26px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 24px 24px 20px;
+      margin: 1.6em 0 2.4em;
+      box-shadow: 0 12px 30px -22px rgba(0, 0, 0, 0.55);
+    }
+    .monogram {
+      position: relative;
+      flex: none;
+      padding: 11px;
+      border-radius: 50%;
+    }
+    .monogram svg {
+      width: 150px;
+      height: 150px;
+      display: block;
+      background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+      border-radius: 50%;
+    }
+    .author-text { flex: 1 1 260px; min-width: 0; }
+    .author-name {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 6vw, 2.3rem);
+      margin: 0 0 4px;
+      line-height: 1.1;
+    }
+    .author-role {
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-size: .82rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin: 0 0 12px;
+    }
+    .author-text p { margin: 0 0 0.9em; }
+    .contact {
+      font-family: var(--font-mono);
+      color: var(--ink-soft);
+      font-size: .9rem;
+    }
+    .contact a { color: var(--accent); text-underline-offset: 3px; word-break: break-all; }
+
+    @media (max-width: 460px) {
+      .author-card { justify-content: center; text-align: center; }
+      .author-text { text-align: left; }
+    }
+  </style>
+</BaseLayout>

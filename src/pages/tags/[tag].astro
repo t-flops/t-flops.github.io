@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAllTags, layerMeta, type TagGroup } from '../../utils/posts';
+
+export async function getStaticPaths() {
+  const tags = await getAllTags();
+  return tags.map((tag) => ({
+    params: { tag: tag.slug },
+    props: { tag },
+  }));
+}
+
+interface Props {
+  tag: TagGroup;
+}
+const { tag } = Astro.props;
+const fmt = (d: Date) =>
+  new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+
+<BaseLayout title={`#${tag.label}`} description={`Posts about ${tag.label}.`}>
+  <a class="back-link" href="/tags/">← all topics</a>
+  <div class="eyebrow" style="margin-top:16px;">topic</div>
+  <h1>{tag.label}</h1>
+  <p class="lede">
+    {tag.posts.length} post{tag.posts.length === 1 ? '' : 's'} about “{tag.label}”.
+  </p>
+
+  <ul class="post-list">
+    {tag.posts.map((p) => {
+      const l = layerMeta(p.data.layer);
+      return (
+        <li class="post-card" data-sketch-frame>
+          <div class="card-head">
+            <a class="layer-chip" href={`/layers/${l.slug}/`}>{l.code}</a>
+            <a class="card-title" href={`/posts/${p.id}`}>{p.data.title}</a>
+          </div>
+          <div class="meta">{fmt(p.data.pubDate)}</div>
+          <p>{p.data.description}</p>
+        </li>
+      );
+    })}
+  </ul>
+</BaseLayout>

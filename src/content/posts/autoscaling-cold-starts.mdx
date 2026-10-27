@@ -1,0 +1,18 @@
+---
+title: Autoscaling GPUs when a cold start costs 40 seconds
+description: Reactive autoscaling assumes a new instance is cheap and quick. On GPU inference it's neither — the replica that would absorb the spike shows up after the spike is over.
+pubDate: 2026-10-02
+layer: scaling
+tags: ['autoscaling', 'cold-start', 'capacity']
+draft: true
+---
+
+import Annotate from '../../components/Annotate.tsx';
+
+*Draft — on the drawing board.* Reactive autoscaling works because adding a stateless web
+replica takes a second or two. A GPU replica has to schedule onto a scarce node, pull a
+multi-gigabyte image, and load weights into VRAM — a <Annotate client:visible type="box" token="--hot">40-second</Annotate>
+cold start is normal. By the time it's ready, the burst it was meant to catch has passed.
+
+This post will work through warm pools, predictive scaling, and the capacity math that
+decides how much idle GPU is worth paying for. Coming soon.

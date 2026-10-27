@@ -1,0 +1,10 @@
+---
+interface Props {
+  caption?: string;
+}
+const { caption } = Astro.props;
+---
+<figure class="figure" data-sketch-frame>
+  <slot />
+  {caption && <figcaption class="figcap">{caption}</figcaption>}
+</figure>

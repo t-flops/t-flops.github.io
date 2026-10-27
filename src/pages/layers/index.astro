@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLayerGroups, LAYERS } from '../../utils/posts';
+
+const groups = await getLayerGroups(true);
+const countOf = new Map(
+  groups.map((g) => [g.slug, g.posts.filter((p) => !p.data.draft).length])
+);
+---
+
+<BaseLayout title="Layers" description="Browse tflops by layer of the inference stack.">
+  <a class="back-link" href="/">← all writing</a>
+  <h1 style="margin-top:16px;">The stack, layer by layer</h1>
+  <p class="lede">
+    Everything here lives somewhere in the path from a request arriving to a token going
+    out. Pick a layer to read just that slice.
+  </p>
+
+  <nav class="stack">
+    {LAYERS.map((l) => (
+      <a class="layer-card" href={`/layers/${l.slug}/`}>
+        <span class="layer-code">{l.code}</span>
+        <span class="layer-body">
+          <span class="layer-name">{l.name}</span>
+          <p class="layer-desc">{l.desc}</p>
+        </span>
+        <span class="layer-count">{countOf.get(l.slug)} post{countOf.get(l.slug) === 1 ? '' : 's'}</span>
+      </a>
+    ))}
+  </nav>
+</BaseLayout>
