@@ -38,6 +38,16 @@ const {
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
     />
+
+    {/* Cloudflare Web Analytics (production builds only) */}
+    {import.meta.env.PROD && (
+      <script
+        is:inline
+        type="module"
+        src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon={`{"token": "5b81c867c55b420dbc8865d4c749e775"}`}
+      ></script>
+    )}
   </head>
   <body>
     <div class="wrap">
