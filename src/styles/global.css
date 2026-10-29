@@ -1,5 +1,5 @@
 /* ============================================================
-   tflops — hand-drawn identity, the single source of truth.
+   t-flops — hand-drawn identity, the single source of truth.
    Metaphor: an engineer's blueprint of the inference stack.
    Cyan line on drafting paper (light) / navy blueprint (dark),
    major + minor drafting grid, everything labeled like a spec.
@@ -21,21 +21,10 @@
   --font-hand: "Gloria Hallelujah", "Comic Sans MS", cursive;
   --font-body: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #091d38;
-    --panel: #0e2a4e;
-    --ink: #e9f3ff;
-    --ink-soft: #9fc0e6;
-    --accent: #5cc8ff;
-    --accent2: #46d6c9;
-    --hot: #ffb060;
-    --line: #15375f;
-    --line2: #1d4877;
-    color-scheme: dark;
-  }
-}
+/* Dark is opt-in via the header toggle — the default is the light blueprint,
+   regardless of the visitor's OS setting. */
 :root[data-theme="dark"] {
   --bg: #091d38;
   --panel: #0e2a4e;
@@ -95,9 +84,23 @@ body::before {
   display: inline-flex; align-items: center; gap: 11px;
 }
 .site-head a.brand svg { flex: none; }
+.site-head .head-right { display: flex; align-items: center; gap: 16px; }
 .site-head nav { display: flex; gap: 16px; font-family: var(--font-hand); }
 .site-head nav a { color: var(--ink-soft); text-decoration: none; font-size: .98rem; }
 .site-head nav a:hover { color: var(--accent); }
+
+/* light/dark toggle (default is light; dark is opt-in and remembered) */
+.theme-toggle {
+  display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0;
+  background: var(--panel); color: var(--ink-soft);
+  border: 1.5px solid var(--line2); border-radius: 8px; cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+.theme-toggle:hover, .theme-toggle:focus-visible { color: var(--accent); border-color: var(--accent); outline: none; }
+.theme-toggle svg { width: 18px; height: 18px; display: block; }
+.theme-toggle .i-sun { display: none; }
+:root[data-theme="dark"] .theme-toggle .i-sun { display: block; }
+:root[data-theme="dark"] .theme-toggle .i-moon { display: none; }
 
 /* ---- type ---- */
 .eyebrow {
@@ -149,7 +152,7 @@ em { font-style: normal; color: var(--accent); }
   color: var(--ink-soft); font-style: italic;
 }
 
-/* spec / byte block — a tflops signature (e.g. a memory or token table) */
+/* spec / byte block — a t-flops signature (e.g. a memory or token table) */
 .specblock {
   font-family: var(--font-mono); font-size: .86rem; line-height: 1.8;
   background: var(--panel); border: 1.5px solid var(--line2);
@@ -286,6 +289,73 @@ footer.site-foot {
 .sketch-btn:hover, .sketch-btn:focus-visible { background: var(--accent); color: var(--panel); outline: none; }
 .sketch-btn[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
 
+/* "another" shuffle link in the hero gallery caption */
+.shuffle-link {
+  font-family: var(--font-mono); font-size: .74rem; color: var(--accent);
+  background: none; border: none; cursor: pointer; padding: 0 2px;
+  white-space: nowrap;
+}
+.shuffle-link:hover, .shuffle-link:focus-visible { text-decoration: underline; outline: none; }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
+}
+/* ---- full-text search (Pagefind) ---- */
+.search-trigger {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-hand); font-size: 1rem; color: var(--ink-soft);
+  background: var(--panel); border: 1.5px solid var(--line); border-radius: 18px;
+  padding: 3px 10px 3px 9px; cursor: pointer;
+  transition: border-color .15s ease, color .15s ease;
+}
+.search-trigger:hover { color: var(--accent); border-color: var(--accent); }
+.search-trigger svg { width: 16px; height: 16px; }
+.search-trigger kbd {
+  font-family: var(--font-hand); font-size: .85rem; color: var(--ink-soft);
+  border: 1.5px solid var(--line); border-radius: 6px; padding: 0 6px; line-height: 1.4;
+}
+
+.search-overlay {
+  position: fixed; inset: 0; z-index: 50;
+  background: color-mix(in srgb, var(--ink) 45%, transparent);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: max(10vh, env(safe-area-inset-top, 0px)) 16px 16px;
+  backdrop-filter: blur(2px);
+}
+.search-modal {
+  width: 100%; max-width: 560px; background: var(--bg);
+  border: 2px dashed var(--accent); border-radius: 14px;
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.6);
+  overflow: hidden; display: flex; flex-direction: column; max-height: 72vh;
+}
+.search-inputrow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border-bottom: 2px dashed var(--line);
+}
+.search-inputrow svg { width: 20px; height: 20px; color: var(--accent); flex: none; }
+.search-input {
+  flex: 1; min-width: 0; border: none; background: transparent;
+  font-family: var(--font-body); font-size: 1.1rem; color: var(--ink);
+}
+.search-input:focus { outline: none; }
+.search-input::placeholder { color: var(--ink-soft); }
+.search-close {
+  font-family: var(--font-hand); font-size: .9rem; color: var(--ink-soft);
+  background: transparent; border: 1.5px solid var(--line); border-radius: 6px;
+  padding: 1px 8px; cursor: pointer;
+}
+.search-close:hover { color: var(--accent); border-color: var(--accent); }
+
+.search-results { list-style: none; margin: 0; padding: 6px; overflow-y: auto; }
+.search-empty { padding: 20px 14px; font-family: var(--font-hand); color: var(--ink-soft); text-align: center; }
+.search-item {
+  display: block; padding: 10px 12px; border-radius: 9px; text-decoration: none; color: var(--ink);
+}
+.search-item.is-active { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.search-item-title { display: block; font-family: var(--font-display); font-size: 1.4rem; line-height: 1.1; }
+.search-item-snip { display: block; font-size: .92rem; color: var(--ink-soft); margin-top: 2px; }
+.search-item mark { background: color-mix(in srgb, var(--accent) 30%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+.search-hint {
+  font-family: var(--font-hand); font-size: .85rem; color: var(--ink-soft);
+  text-align: center; padding: 8px; border-top: 2px dashed var(--line);
 }

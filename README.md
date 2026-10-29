@@ -1,10 +1,10 @@
-# tflops
+# t-flops
 
 A hand-drawn blog about **AI inference, MLOps, and infrastructure** — serving, batching,
 GPUs, autoscaling, latency tails — rebuilt from sketches and small animations.
 
-Third sibling to [The Learning Rate](../thelearningrate.io) (ML explainers) and
-[Page Zero](../pagezero.io) (database internals): same philosophy (Astro + React islands +
+Third sibling to [The Overfit](../the-overfit.github.io) (ML explainers) and
+[Write-Ahead](../write-ahead.github.io) (database internals): same philosophy (Astro + React islands +
 [rough.js](https://roughjs.com) hand-drawn diagrams, "theme + custom components"), its own
 identity — an **engineer's blueprint**: cyan line on drafting paper (light) / navy
 blueprint (dark), a major+minor drafting grid, Gloria Hallelujah + IBM Plex Mono, and a

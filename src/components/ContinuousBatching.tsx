@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
 
 /**
- * tflops' signature island: continuous batching on a GPU.
+ * t-flops' signature island: continuous batching on a GPU.
  *
  * Four slots run requests that each generate a random number of tokens.
  * In STATIC batching a finished slot sits idle until the whole batch drains,
@@ -22,6 +22,7 @@ type Mode = 'continuous' | 'static';
 
 export default function ContinuousBatching() {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const slots = useRef<(Req | null)[]>([]);
   const queue = useRef<Req[]>([]);
   const nextId = useRef(1);
@@ -31,6 +32,7 @@ export default function ContinuousBatching() {
 
   const [mode, setMode] = useState<Mode>('continuous');
   const [running, setRunning] = useState(true);
+  const [visible, setVisible] = useState(true);
   const [readout, setReadout] = useState({ util: 100, served: 0, queued: 0 });
 
   const reduce =
@@ -156,29 +158,40 @@ export default function ContinuousBatching() {
         const frac = Math.min(1, r.done / r.len);
         const finished = r.done >= r.len;
         const fill = finished ? hot : accent;
-        const fw = Math.max(0, (w - 8) * frac);
-        if (fw > 1.5) {
-          svg.appendChild(
-            rc.rectangle(x + 4, y + 4, fw, h - 8, {
-              fill,
-              fillStyle: 'solid',
-              stroke: fill,
-              strokeWidth: 0.8,
-              roughness: 1,
-            })
-          );
-        }
-        text(x + 12, y + 29, `req #${r.id}`, frac > 0.1 ? panel : ink, 13, 'start');
+        // labels sit on the panel, never on the fill, so they stay legible
+        // at any progress and in either theme
+        text(x + 14, y + 23, `req #${r.id}`, ink, 13, 'start');
         text(
-          x + w - 12,
-          y + 29,
+          x + w - 14,
+          y + 23,
           finished ? 'done · idle' : `${Math.min(r.done, r.len)}/${r.len} tok`,
           finished ? hot : inkSoft,
           12,
           'end'
         );
+        // progress bar along the bottom of the slot: track + fill
+        const track = w - 28;
+        svg.appendChild(
+          rc.rectangle(x + 14, y + h - 14, track, 7, {
+            stroke: line2,
+            strokeWidth: 0.8,
+            roughness: 0.7,
+          })
+        );
+        const fw = Math.max(0, track * frac);
+        if (fw > 1.5) {
+          svg.appendChild(
+            rc.rectangle(x + 14, y + h - 14, fw, 7, {
+              fill,
+              fillStyle: 'solid',
+              stroke: fill,
+              strokeWidth: 0.6,
+              roughness: 0.7,
+            })
+          );
+        }
       } else {
-        text(x + w / 2, y + 29, 'empty', inkSoft, 12, 'middle');
+        text(x + w / 2, y + 27, 'empty', inkSoft, 12, 'middle');
       }
     }
 
@@ -206,7 +219,11 @@ export default function ContinuousBatching() {
     const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
     const onTheme = () => draw();
     mq?.addEventListener('change', onTheme);
-    return () => mq?.removeEventListener('change', onTheme);
+    window.addEventListener('t-flops:themechange', onTheme);
+    return () => {
+      mq?.removeEventListener('change', onTheme);
+      window.removeEventListener('t-flops:themechange', onTheme);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -219,16 +236,28 @@ export default function ContinuousBatching() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
-  // the clock
+  // auto-pause when the diagram is scrolled off-screen
   useEffect(() => {
-    if (!running || reduce) return;
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => setVisible(e.isIntersecting)),
+      { threshold: 0.2 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // the clock — runs only while playing, visible, and motion is allowed
+  useEffect(() => {
+    if (!running || reduce || !visible) return;
     const t = setInterval(step, TICK_MS);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, mode, reduce]);
+  }, [running, mode, reduce, visible]);
 
   return (
-    <div className="cb">
+    <div className="cb" ref={rootRef}>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${VB_W} ${VB_H}`}

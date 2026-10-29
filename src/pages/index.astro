@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Figure from '../components/Figure.astro';
-import ContinuousBatching from '../components/ContinuousBatching.tsx';
+import HeroDemo from '../components/HeroDemo.tsx';
 import { getLayerGroups, getPublishedPosts, LAYERS } from '../utils/posts';
 
 const groups = await getLayerGroups(true);
@@ -20,7 +19,7 @@ const fmt = (d: Date) =>
 const layerOf = (slug: string) => LAYERS.find((l) => l.slug === slug)!;
 ---
 
-<BaseLayout title="tflops">
+<BaseLayout title="t-flops">
   <div class="eyebrow">AI inference <span class="dot">·</span> MLOps <span class="dot">·</span> infrastructure</div>
   <h1>The inference stack, <em>drawn to spec</em>.</h1>
   <p class="lede">
@@ -29,9 +28,7 @@ const layerOf = (slug: string) => LAYERS.find((l) => l.slug === slug)!;
     measured, and poked at until it makes sense.
   </p>
 
-  <Figure caption="Continuous batching: a finished slot is refilled from the queue immediately — toggle Static to watch stragglers waste the GPU.">
-    <ContinuousBatching client:visible />
-  </Figure>
+  <HeroDemo client:visible />
 
   <div class="section-label">The stack</div>
   <nav class="stack">
