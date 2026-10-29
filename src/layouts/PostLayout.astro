@@ -10,6 +10,7 @@ interface Props {
     pubDate: Date;
     layer: LayerSlug;
     tags?: string[];
+    ogImage?: string;
   };
 }
 const { id, frontmatter } = Astro.props;
@@ -23,7 +24,7 @@ const date = new Date(frontmatter.pubDate).toLocaleDateString('en-US', {
 });
 ---
 
-<BaseLayout title={frontmatter.title} description={frontmatter.description}>
+<BaseLayout title={frontmatter.title} description={frontmatter.description} image={frontmatter.ogImage} type="article">
   <article data-pagefind-body>
     <a class="back-link" href="/" data-pagefind-ignore>← all writing</a>
     <div class="eyebrow" style="margin-top:16px;">
